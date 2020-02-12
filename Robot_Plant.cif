@@ -1,0 +1,118 @@
+event Go, Stop, Left, Right, Raise, Lower;
+
+automaton def Robot():
+
+    location Idle:
+    initial;
+        edge Go goto Moving_forward;
+        edge Left goto Rotating_left;
+        edge Right goto Rotating_right;
+        edge Raise goto Raising_lift;
+        edge Lower goto Lowering_lift;
+
+    location Moving_forward:
+        edge Stop goto Idle;
+
+    location Rotating_left:
+        edge Stop goto Idle;
+
+    location Rotating_right:
+        edge Stop goto Idle;
+
+    location Raising_lift:
+        edge Stop goto Idle;
+
+    location Lowering_lift:
+        edge Stop goto Idle;
+
+end
+
+event See_barcode, Loc_storage,Loc_driving,Loc_picking,Loc_charging,Completed_action;
+
+automaton Loc_sensor:
+
+    location Visible:
+        edge Loc_storage goto Storage;
+        edge Loc_driving goto Driving;
+        edge Loc_picking goto Picking;
+        edge Loc_charging goto Charging;
+
+    location Not_visible:
+        initial;
+        edge See_barcode goto Visible;
+
+    location Storage:
+        edge Completed_action goto Not_visible;
+
+    location Driving:
+        edge Completed_action goto Not_visible;
+
+    location Picking:
+        edge Completed_action goto Not_visible;
+
+    location Charging:
+        edge Completed_action goto Not_visible;
+
+end
+
+event Drive_forward,Rotate,Stop_moving;
+
+automaton DC_sensor:
+
+    location Idle:
+        initial;
+        edge Drive_forward goto Driving_forward;
+        edge Rotate goto Rotating;
+
+    location Driving_forward:
+        edge Stop goto Idle;
+
+    location Rotating:
+        edge Stop_moving goto Idle;
+
+end
+
+event Touched,No_Touching;
+
+automaton Touch_sensor:
+
+    location Free:
+        initial;
+        edge Touched goto Touching;
+
+    location Touching:
+        edge No_Touching goto Free;
+end
+
+event Lift_move_up, Lift_move_down,Moved_up,Moved_down;
+
+automaton Lift_sensor:
+disc int moving =0;
+    location Lift_down:
+        initial;
+        edge Lift_move_up do moving:= moving + 1 goto Moving;
+
+    location Moving:
+        edge Moved_up when moving = 1 goto Lift_up;
+        edge Moved_down when moving =0 goto Lift_down;
+
+    location Lift_up:
+        edge Lift_move_down do moving:= moving -1 goto Lift_down;
+end
+
+event Crit_low,Need_charge,Charging;
+
+automaton Bat_sensor:
+
+    location Full:
+    initial;
+        edge Need_charge goto Needs_charging;
+
+    location Needs_charging:
+        edge Charging goto Full;
+        edge Crit_low goto Critically_low;
+
+    location Critically_low:
+        edge Charging goto Full;
+
+end
